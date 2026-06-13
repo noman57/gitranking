@@ -27,7 +27,7 @@ public class GitHubFeignConfig {
     @Bean
     public RequestInterceptor githubRequestInterceptor() {
         return template -> {
-            if (!bearerToken.isBlank()) {
+            if (bearerToken != null && !bearerToken.isBlank()) {
                 template.header("Authorization", "Bearer " + bearerToken);
             }
             template.header("Accept", "application/vnd.github+json");
