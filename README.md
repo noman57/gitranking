@@ -82,6 +82,57 @@ GET /repositories?language=java&createdAfter=2023-01-01&perPage=10
 GET /actuator/health
 ```
 
+## Design Decisions
+
+### OpenFeign Client
+
+GitHub API calls are made via a declarative [Spring Cloud OpenFeign](https://spring.io/projects/spring-cloud-openfeign) client (`GitHubClient`). The interface maps directly to `GET /search/repositories` — no boilerplate HTTP code. Standard GitHub headers (`Accept`, `X-GitHub-Api-Version`) and the bearer token are injected automatically on every request via a `RequestInterceptor` configured in `GitHubFeignConfig`.
+
+A custom `ErrorDecoder` (`GitHubApiErrorDecoder`) intercepts non-2xx responses before they reach application code and translates them into typed domain exceptions:
+
+| HTTP Status | Exception |
+|---|---|
+| 401, 403 | `GitHubAuthException` |
+| 429 | `GitHubRateLimitException` |
+| 500, 502, 503, 504 | `GitHubUpstreamException` |
+
+### Global Error Handling
+
+A `@RestControllerAdvice` (`GlobalExceptionHandler`) catches all domain exceptions and maps them to safe, human-readable HTTP responses. Raw GitHub API error bodies and internal stack traces are written to the log only — they are never included in the response body.
+
+| Exception | HTTP Status | Client Message |
+|---|---|---|
+| `GitHubRateLimitException` | 429 | "GitHub API rate limit exceeded. Please wait before retrying." |
+| `GitHubAuthException` | 503 | "Repository search is temporarily unavailable. Please try again later." |
+| `GitHubUpstreamException` | 502 | "Repository search is temporarily unavailable. Please try again later." |
+| Invalid parameter | 400 | "Invalid value for parameter '...'." |
+| Unexpected | 500 | "An unexpected error occurred. Please try again later." |
+
+### Retry Mechanism
+
+[Resilience4j](https://resilience4j.readme.io/) retries failed GitHub API calls automatically via the `@Retry(name = "githubSearch")` annotation on `RepositorySearchService.search()`.
+
+| Setting | Value |
+|---|---|
+| Max attempts | 3 |
+| Wait between retries | 500ms |
+| Retry on | `GitHubUpstreamException`, `IOException` |
+| Do not retry | `GitHubAuthException`, `GitHubRateLimitException` |
+
+Auth and rate-limit failures are not retried — they will not resolve by retrying and would only burn rate-limit quota further.
+
+### Why Not MapStruct?
+
+MapStruct was considered for mapping `GitHubRepository` (the internal GitHub API DTO) to `RepositoryResult` (the API response DTO). The mapping is a single constructor call:
+
+```java
+new RepositoryResult(repo.getFullName(), repo.getHtmlUrl(), scorer.score(repo, now))
+```
+
+Adding MapStruct would introduce an annotation processor, a mapper interface, and build-time code generation to replace one line of code. The rule applied here: don't add a framework to solve a problem the language already solves cleanly.
+
+---
+
 ## Configuration Reference
 
 | Property | Default | Description |
