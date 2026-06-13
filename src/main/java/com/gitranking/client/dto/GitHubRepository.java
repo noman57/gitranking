@@ -1,4 +1,4 @@
-package com.gitranking.dto;
+package com.gitranking.client.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -24,7 +24,7 @@ public class GitHubRepository {
     private Integer forksCount;
 
     private String language;
-    private OwnerDto owner;
+    private Owner owner;
 
     @JsonProperty("updated_at")
     private String updatedAt;

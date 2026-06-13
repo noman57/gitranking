@@ -1,7 +1,7 @@
 package com.gitranking.service;
 
 import com.gitranking.client.GitHubClient;
-import com.gitranking.dto.GitHubSearchResponse;
+import com.gitranking.client.dto.GitHubSearchResponse;
 import com.gitranking.scoring.PopularityScorer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,10 +1,10 @@
-package com.gitranking.dto;
+package com.gitranking.client.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class OwnerDto {
+public class Owner {
 
     private String login;
 

@@ -1,6 +1,6 @@
 package com.gitranking.scoring;
 
-import com.gitranking.dto.GitHubRepository;
+import com.gitranking.client.dto.GitHubRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

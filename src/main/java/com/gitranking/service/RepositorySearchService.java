@@ -1,7 +1,7 @@
 package com.gitranking.service;
 
 import com.gitranking.client.GitHubClient;
-import com.gitranking.dto.GitHubSearchResponse;
+import com.gitranking.client.dto.GitHubSearchResponse;
 import com.gitranking.dto.PagedResult;
 import com.gitranking.dto.RepositoryResult;
 import com.gitranking.scoring.PopularityScorer;
