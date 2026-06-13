@@ -1,0 +1,26 @@
+{
+  "total_count": 2,
+  "incomplete_results": false,
+  "items": [
+    {
+      "id": 1,
+      "name": "popular-repo",
+      "full_name": "user/popular-repo",
+      "stargazers_count": 5000,
+      "forks_count": 200,
+      "updated_at": "2025-12-01T00:00:00Z",
+      "language": "Java",
+      "owner": { "login": "user", "avatar_url": "https://avatars.githubusercontent.com/u/1" }
+    },
+    {
+      "id": 2,
+      "name": "old-repo",
+      "full_name": "user/old-repo",
+      "stargazers_count": 100,
+      "forks_count": 10,
+      "updated_at": "2020-01-01T00:00:00Z",
+      "language": "Java",
+      "owner": { "login": "user", "avatar_url": "https://avatars.githubusercontent.com/u/1" }
+    }
+  ]
+}
