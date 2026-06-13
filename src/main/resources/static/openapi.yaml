@@ -1,0 +1,189 @@
+openapi: 3.1.0
+
+info:
+  title: GitRanking API
+  version: 1.0.0
+  description: |
+    Search GitHub repositories and rank them by popularity.
+
+    ## Scoring Formula
+    Each repository is enriched with a `popularityScore` computed as:
+
+    ```
+    score = (stars × 3 + forks × 2) × e^(-0.001 × daysSinceLastUpdate)
+    ```
+
+    Results are returned in GitHub's native result order. The score can be used
+    by clients to apply their own ranking or filtering.
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /repositories:
+    get:
+      summary: Search and score GitHub repositories
+      description: |
+        Searches GitHub's public repositories using the provided filters and returns
+        each result enriched with a popularity score.
+      operationId: searchRepositories
+      parameters:
+        - name: language
+          in: query
+          required: false
+          description: Filter by programming language (e.g. `java`, `python`)
+          schema:
+            type: string
+            example: java
+        - name: createdAfter
+          in: query
+          required: false
+          description: Only include repositories created on or after this date (ISO 8601)
+          schema:
+            type: string
+            format: date
+            example: "2023-01-01"
+        - name: perPage
+          in: query
+          required: false
+          description: Number of results per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+        - name: page
+          in: query
+          required: false
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        "200":
+          description: Paged list of repositories enriched with popularity scores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResult"
+              example:
+                page: 1
+                perPage: 30
+                totalCount: 2847
+                incompleteResults: false
+                items:
+                  - name: "octocat/awesome-repo"
+                    url: "https://github.com/octocat/awesome-repo"
+                    popularityScore: 15423.87
+                  - name: "user/another-repo"
+                    url: "https://github.com/user/another-repo"
+                    popularityScore: 342.10
+        "400":
+          description: Invalid request parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: GitHub API rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: GitHub API is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: GitHub authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    PagedResult:
+      type: object
+      required:
+        - page
+        - perPage
+        - totalCount
+        - incompleteResults
+        - items
+      properties:
+        page:
+          type: integer
+          description: Current page number (1-based)
+          example: 1
+        perPage:
+          type: integer
+          description: Number of items per page
+          example: 30
+        totalCount:
+          type: integer
+          description: Total matching repositories on GitHub (capped at 1000 by GitHub)
+          example: 2847
+        incompleteResults:
+          type: boolean
+          description: True if GitHub's result set was truncated due to query timeout
+          example: false
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RepositoryResult"
+
+    RepositoryResult:
+      type: object
+      required:
+        - name
+        - url
+        - popularityScore
+      properties:
+        name:
+          type: string
+          description: Full repository name including owner (e.g. `octocat/hello-world`)
+          example: "octocat/hello-world"
+        url:
+          type: string
+          format: uri
+          description: URL to the repository on GitHub
+          example: "https://github.com/octocat/hello-world"
+        popularityScore:
+          type: number
+          format: double
+          description: |
+            Computed popularity score: `(stars × 3 + forks × 2) × e^(-0.001 × daysSinceLastUpdate)`.
+            Higher is more popular. Not normalised — use for relative comparison within a result set.
+          example: 15423.87
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+        - timestamp
+      properties:
+        status:
+          type: integer
+          description: HTTP status code
+          example: 429
+        message:
+          type: string
+          description: Human-readable error description safe for client display
+          example: "GitHub API rate limit exceeded. Please wait before retrying."
+        timestamp:
+          type: string
+          format: date-time
+          description: Time the error occurred (UTC)
+          example: "2026-06-12T10:15:30Z"
+
