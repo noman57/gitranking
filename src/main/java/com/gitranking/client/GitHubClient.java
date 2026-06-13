@@ -1,7 +1,7 @@
 package com.gitranking.client;
 
 import com.gitranking.client.config.GitHubFeignConfig;
-import com.gitranking.client.dto.GitHubSearchResponse;
+import com.gitranking.client.model.GitHubSearchResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;

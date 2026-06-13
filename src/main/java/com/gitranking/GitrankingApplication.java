@@ -1,6 +1,6 @@
 package com.gitranking;
 
-import com.gitranking.scoring.ScoringProperties;
+import com.gitranking.service.ScoringProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

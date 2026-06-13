@@ -1,6 +1,6 @@
-package com.gitranking.scoring;
+package com.gitranking.service;
 
-import com.gitranking.client.dto.GitHubRepository;
+import com.gitranking.client.model.GitHubRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

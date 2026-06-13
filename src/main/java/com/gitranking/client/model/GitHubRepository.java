@@ -1,4 +1,4 @@
-package com.gitranking.client.dto;
+package com.gitranking.client.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

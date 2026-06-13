@@ -1,4 +1,4 @@
-package com.gitranking.dto;
+package com.gitranking.exception;
 
 import lombok.Getter;
 

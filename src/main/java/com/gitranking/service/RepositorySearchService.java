@@ -1,10 +1,10 @@
 package com.gitranking.service;
 
 import com.gitranking.client.GitHubClient;
-import com.gitranking.client.dto.GitHubSearchResponse;
-import com.gitranking.dto.PagedResult;
-import com.gitranking.dto.RepositoryResult;
-import com.gitranking.scoring.PopularityScorer;
+import com.gitranking.client.model.GitHubSearchResponse;
+import com.gitranking.model.PagedResult;
+import com.gitranking.model.RepositoryResult;
+import com.gitranking.service.PopularityScorer;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

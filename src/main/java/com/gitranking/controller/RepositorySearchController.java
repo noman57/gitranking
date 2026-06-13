@@ -1,7 +1,7 @@
 package com.gitranking.controller;
 
-import com.gitranking.dto.PagedResult;
-import com.gitranking.dto.RepositoryResult;
+import com.gitranking.model.PagedResult;
+import com.gitranking.model.RepositoryResult;
 import com.gitranking.service.RepositorySearchService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.gitranking.scoring;
+package com.gitranking.service;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
