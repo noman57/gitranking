@@ -7,6 +7,7 @@ import com.gitranking.model.PagedResult;
 import com.gitranking.model.RepositoryResult;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -39,6 +40,7 @@ public class RepositorySearchService {
      * @param page         page number (1-based)
      * @return paged result containing scored repositories and pagination metadata
      */
+    @Cacheable(value = "repositories", key = "{#language, #createdAfter, #perPage, #page}")
     @Retry(name = "githubSearch")
     public PagedResult<RepositoryResult> search(String language, LocalDate createdAfter, int perPage, int page) {
         String query = buildQuery(language, createdAfter);
