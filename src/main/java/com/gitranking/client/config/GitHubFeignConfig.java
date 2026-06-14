@@ -16,6 +16,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GitHubFeignConfig {
 
+    private static final String GITHUB_ACCEPT_HEADER = "application/vnd.github+json";
+    private static final String GITHUB_API_VERSION = "2022-11-28";
+
     @Value("${github.token:}")
     private String bearerToken;
 
@@ -30,8 +33,8 @@ public class GitHubFeignConfig {
             if (bearerToken != null && !bearerToken.isBlank()) {
                 template.header("Authorization", "Bearer " + bearerToken);
             }
-            template.header("Accept", "application/vnd.github+json");
-            template.header("X-GitHub-Api-Version", "2022-11-28");
+            template.header("Accept", GITHUB_ACCEPT_HEADER);
+            template.header("X-GitHub-Api-Version", GITHUB_API_VERSION);
         };
     }
 }

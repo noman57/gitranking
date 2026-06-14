@@ -64,4 +64,22 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("sensitive internal detail"))));
     }
+
+    @Test
+    void whenAuthFails_returns502WithSafeMessage() throws Exception {
+        when(repositorySearchService.search(any(), any(), anyInt(), anyInt()))
+                .thenThrow(new GitHubAuthException("internal auth detail", 401));
+
+        mockMvc.perform(get("/repositories"))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.status").value(502))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("internal auth detail"))));
+    }
+
+    @Test
+    void whenPerPageExceedsMax_returns400() throws Exception {
+        mockMvc.perform(get("/repositories").param("perPage", "101"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
 }

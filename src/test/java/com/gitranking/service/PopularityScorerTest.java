@@ -54,14 +54,6 @@ class PopularityScorerTest {
     }
 
     @Test
-    void score_handlesNullCounts_treatingThemAsZero() {
-        GitHubRepository repo = new GitHubRepository();
-        repo.setUpdatedAt(NOW.toString());
-
-        assertThat(scorer.score(repo, NOW)).isEqualTo(0.0, within(0.0001));
-    }
-
-    @Test
     void score_handlesNullUpdatedAt_applyingNoRecencyPenalty() {
         GitHubRepository withDate    = repoWithStats(1000, 100, NOW);
         GitHubRepository withoutDate = repoWithStats(1000, 100, null);
@@ -88,7 +80,7 @@ class PopularityScorerTest {
         GitHubRepository repo = new GitHubRepository();
         repo.setStargazersCount(stars);
         repo.setForksCount(forks);
-        repo.setUpdatedAt(updatedAt != null ? updatedAt.toString() : null);
+        repo.setUpdatedAt(updatedAt);
         return repo;
     }
 }

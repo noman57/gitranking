@@ -1,16 +1,17 @@
 package com.gitranking.service;
 
 import com.gitranking.client.GitHubClient;
+import com.gitranking.client.model.GitHubRepository;
 import com.gitranking.client.model.GitHubSearchResponse;
 import com.gitranking.model.PagedResult;
 import com.gitranking.model.RepositoryResult;
-import com.gitranking.service.PopularityScorer;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -43,20 +44,24 @@ public class RepositorySearchService {
         String query = buildQuery(language, createdAfter);
         log.debug("Searching repositories — query: '{}', perPage: {}, page: {}", query, perPage, page);
         GitHubSearchResponse response = gitHubClient.searchRepositories(query, "updated", "desc", perPage, page);
-        log.debug("GitHub returned {} repositories (incomplete: {})", response.getItems().size(), response.getIncompleteResults());
+        List<GitHubRepository> items = response.getItems() != null ? response.getItems() : Collections.emptyList();
+        log.debug("GitHub returned {} repositories", items.size());
+        if (response.isIncompleteResults()) {
+            log.warn("GitHub returned incomplete results for query '{}' — results may be partial", query);
+        }
 
         Instant now = Instant.now();
-        log.debug("Scoring {} repositories", response.getItems().size());
-        List<RepositoryResult> results = response.getItems().stream()
+        log.debug("Scoring {} repositories", items.size());
+        List<RepositoryResult> results = items.stream()
                 .map(repo -> new RepositoryResult(repo.getFullName(), repo.getHtmlUrl(), scorer.score(repo, now)))
                 .toList();
-        return new PagedResult<>(page, perPage, response.getTotalCount(), response.getIncompleteResults(), results);
+        return new PagedResult<>(page, perPage, response.getTotalCount(), results);
     }
 
     private String buildQuery(String language, LocalDate createdAfter) {
         StringBuilder q = new StringBuilder("is:public");
         if (language != null && !language.isBlank()) {
-            q.append(" language:").append(language);
+            q.append(" language:").append(language.strip().replaceAll("[^a-zA-Z0-9+#]", ""));
         }
         if (createdAfter != null) {
             q.append(" created:>=").append(createdAfter);

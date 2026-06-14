@@ -6,6 +6,7 @@ import com.gitranking.exception.GitHubUpstreamException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,16 +20,16 @@ public class GitHubApiErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-        log.debug("Decoding GitHub error response — method: {}, status: {}", methodKey, response.status());
         String body = readBody(response);
+        log.debug("GitHub error response — method: {}, status: {}, body: {}", methodKey, response.status(), body);
         return switch (response.status()) {
             case 401, 403 -> new GitHubAuthException(
-                    "GitHub auth failure [%d] on %s: %s".formatted(response.status(), methodKey, body),
+                    "GitHub auth failure [%d] on %s".formatted(response.status(), methodKey),
                     response.status());
             case 429 -> new GitHubRateLimitException(
-                    "GitHub rate limit hit on %s: %s".formatted(methodKey, body));
+                    "GitHub rate limit hit on %s".formatted(methodKey));
             case 500, 502, 503, 504 -> new GitHubUpstreamException(
-                    "GitHub upstream error [%d] on %s: %s".formatted(response.status(), methodKey, body),
+                    "GitHub upstream error [%d] on %s".formatted(response.status(), methodKey),
                     response.status());
             default -> defaultDecoder.decode(methodKey, response);
         };

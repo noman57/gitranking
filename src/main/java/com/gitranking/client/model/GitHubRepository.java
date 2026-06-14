@@ -3,6 +3,8 @@ package com.gitranking.client.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 public class GitHubRepository {
 
@@ -18,14 +20,14 @@ public class GitHubRepository {
     private String htmlUrl;
 
     @JsonProperty("stargazers_count")
-    private Integer stargazersCount;
+    private int stargazersCount;
 
     @JsonProperty("forks_count")
-    private Integer forksCount;
+    private int forksCount;
 
     private String language;
     private Owner owner;
 
     @JsonProperty("updated_at")
-    private String updatedAt;
+    private Instant updatedAt;
 }

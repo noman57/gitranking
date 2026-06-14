@@ -1,12 +1,12 @@
 package com.gitranking.exception;
 
-import com.gitranking.exception.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
@@ -23,13 +23,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleRateLimit(GitHubRateLimitException ex) {
         log.warn("GitHub rate limit exceeded. {}", ex.getMessage());
         return error(HttpStatus.TOO_MANY_REQUESTS,
-                "GitHub API rate limit exceeded. Please wait before retrying.");
+                "Rate limit exceeded. Please wait before retrying.");
     }
 
     @ExceptionHandler(GitHubAuthException.class)
     public ResponseEntity<ErrorResponse> handleAuth(GitHubAuthException ex) {
         log.error("GitHub authentication failure. {}", ex.getMessage());
-        return error(HttpStatus.SERVICE_UNAVAILABLE,
+        return error(HttpStatus.BAD_GATEWAY,
                 "Repository search is temporarily unavailable. Please try again later.");
     }
 
@@ -52,6 +52,20 @@ public class GlobalExceptionHandler {
                 "Invalid value for parameter '" + ex.getName() + "'. Please check the request and try again.");
     }
 
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(jakarta.validation.ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> "Invalid value for parameter '" + extractParamName(v.getPropertyPath().toString()) + "'.")
+                .findFirst()
+                .orElse("Invalid request parameter.");
+        return error(HttpStatus.BAD_REQUEST, message);
+    }
+
+    private String extractParamName(String propertyPath) {
+        String[] parts = propertyPath.split("\\.");
+        return parts[parts.length - 1];
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
         log.error("Unexpected error processing request", ex);
@@ -60,6 +74,6 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> error(HttpStatus status, String message) {
-        return ResponseEntity.status(status).body(new ErrorResponse(status.value(), message));
+        return ResponseEntity.status(status).body(ErrorResponse.of(status.value(), message));
     }
 }

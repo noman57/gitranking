@@ -36,27 +36,21 @@ public class PopularityScorer {
      * @return popularity score >= 0
      */
     public double score(GitHubRepository repo, Instant now) {
-        log.debug("Scoring '{}' — stars: {}, forks: {}, updatedAt: {}", repo.getFullName(), repo.getStargazersCount(), repo.getForksCount(), repo.getUpdatedAt());
-        double activityScore = safe(repo.getStargazersCount()) * props.getStarsWeight()
-                             + safe(repo.getForksCount())      * props.getForksWeight();
+        log.debug("Scoring '{}' — stars: {}, forks: {}, updatedAt: {}",
+                repo.getFullName(), repo.getStargazersCount(), repo.getForksCount(), repo.getUpdatedAt());
+
+        double activityScore = repo.getStargazersCount() * props.starsWeight()
+                             + repo.getForksCount()      * props.forksWeight();
 
         double recency = recencyMultiplier(repo.getUpdatedAt(), now);
-        log.debug("Score for '{}': activityScore={}, recencyMultiplier={}, finalScore={}", repo.getFullName(), activityScore, recency, activityScore * recency);
+        log.debug("Score for '{}': activityScore={}, recencyMultiplier={}, finalScore={}",
+                repo.getFullName(), activityScore, recency, activityScore * recency);
         return activityScore * recency;
     }
 
-    private double recencyMultiplier(String updatedAt, Instant now) {
-        if (updatedAt == null || updatedAt.isBlank()) return 1.0;
-        try {
-            long days = ChronoUnit.DAYS.between(Instant.parse(updatedAt), now);
-            return Math.exp(-props.getRecencyDecay() * Math.max(days, 0));
-        } catch (Exception e) {
-            log.debug("Could not parse updatedAt '{}', defaulting recency multiplier to 1.0", updatedAt);
-            return 1.0;
-        }
-    }
-
-    private int safe(Integer value) {
-        return value == null ? 0 : value;
+    private double recencyMultiplier(Instant updatedAt, Instant now) {
+        if (updatedAt == null) return 1.0;
+        long days = ChronoUnit.DAYS.between(updatedAt, now);
+        return Math.exp(-props.recencyDecay() * Math.max(days, 0));
     }
 }

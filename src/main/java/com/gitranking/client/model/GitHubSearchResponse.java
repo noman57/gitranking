@@ -9,10 +9,10 @@ import java.util.List;
 public class GitHubSearchResponse {
 
     @JsonProperty("total_count")
-    private Integer totalCount;
+    private int totalCount;
 
     @JsonProperty("incomplete_results")
-    private Boolean incompleteResults;
+    private boolean incompleteResults;
 
     private List<GitHubRepository> items;
 }

@@ -66,4 +66,42 @@ class RepositorySearchServiceTest {
         String capturedQuery = queryCaptor.getValue();
         assertThat(capturedQuery).isEqualTo("is:public");
     }
+
+    @Test
+    void search_ignoresBlankLanguage() {
+        GitHubSearchResponse response = new GitHubSearchResponse();
+        response.setItems(List.of());
+        response.setTotalCount(0);
+        response.setIncompleteResults(false);
+
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+
+        when(gitHubClient.searchRepositories(queryCaptor.capture(), anyString(), anyString(), anyInt(), anyInt()))
+                .thenReturn(response);
+
+        service.search(" ", null, 10, 1);
+
+        String capturedQuery = queryCaptor.getValue();
+        assertThat(capturedQuery).isEqualTo("is:public");
+        assertThat(capturedQuery).doesNotContain("language:");
+    }
+
+    @Test
+    void search_buildsQueryWithCreatedAfterOnly() {
+        GitHubSearchResponse response = new GitHubSearchResponse();
+        response.setItems(List.of());
+        response.setTotalCount(0);
+        response.setIncompleteResults(false);
+
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+
+        when(gitHubClient.searchRepositories(queryCaptor.capture(), anyString(), anyString(), anyInt(), anyInt()))
+                .thenReturn(response);
+
+        service.search(null, LocalDate.of(2024, 1, 1), 10, 1);
+
+        String capturedQuery = queryCaptor.getValue();
+        assertThat(capturedQuery).contains("created:>=2024-01-01");
+        assertThat(capturedQuery).doesNotContain("language:");
+    }
 }

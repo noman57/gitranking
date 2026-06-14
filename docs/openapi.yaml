@@ -71,7 +71,6 @@ paths:
                 page: 1
                 perPage: 30
                 totalCount: 2847
-                incompleteResults: false
                 items:
                   - name: "octocat/awesome-repo"
                     url: "https://github.com/octocat/awesome-repo"
@@ -86,7 +85,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "429":
-          description: GitHub API rate limit exceeded
+          description: Rate limit exceeded
           content:
             application/json:
               schema:
@@ -118,7 +117,6 @@ components:
         - page
         - perPage
         - totalCount
-        - incompleteResults
         - items
       properties:
         page:
@@ -131,12 +129,8 @@ components:
           example: 30
         totalCount:
           type: integer
-          description: Total matching repositories on GitHub (capped at 1000 by GitHub)
+          description: Total number of matching results
           example: 2847
-        incompleteResults:
-          type: boolean
-          description: True if GitHub's result set was truncated due to query timeout
-          example: false
         items:
           type: array
           items:
@@ -180,7 +174,7 @@ components:
         message:
           type: string
           description: Human-readable error description safe for client display
-          example: "GitHub API rate limit exceeded. Please wait before retrying."
+          example: "Rate limit exceeded. Please wait before retrying."
         timestamp:
           type: string
           format: date-time
