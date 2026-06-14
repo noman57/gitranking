@@ -28,6 +28,25 @@ To pass a GitHub token:
 GITHUB_TOKEN=<your-github-pat> docker compose up --build
 ```
 
+### Docker commands
+
+```bash
+# Start the full stack (builds the app image)
+docker compose up --build
+
+# Start in background
+docker compose up --build -d
+
+# View logs
+docker compose logs -f app
+
+# Stop
+docker compose down
+
+# Rebuild after code changes
+docker compose up --build app
+```
+
 ### Run locally
 
 **Prerequisites:** Java 21, Maven 3.x
@@ -88,6 +107,19 @@ GET /repositories?language=java&createdAfter=2023-01-01&perPage=10
     }
   ]
 }
+```
+
+**curl examples:**
+
+```bash
+# Search Java repositories created after 2023
+curl "http://localhost:8080/repositories?language=java&createdAfter=2023-01-01&perPage=10"
+
+# Search with pagination
+curl "http://localhost:8080/repositories?language=python&perPage=5&page=2"
+
+# No filters — top repositories
+curl "http://localhost:8080/repositories"
 ```
 
 ### Health Check

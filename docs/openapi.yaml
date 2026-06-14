@@ -91,13 +91,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "502":
-          description: GitHub API is unavailable
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "503":
-          description: GitHub authentication failed
+          description: Upstream service unavailable
           content:
             application/json:
               schema:
@@ -150,7 +144,7 @@ components:
         url:
           type: string
           format: uri
-          description: URL to the repository on GitHub
+          description: URL to the repository
           example: "https://github.com/octocat/hello-world"
         popularityScore:
           type: number
