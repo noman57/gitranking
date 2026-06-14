@@ -10,7 +10,6 @@ import java.util.List;
 public record PagedResult<T>(
         int page,
         int perPage,
-        /** Total number of matching results. */
         int totalCount,
         List<T> items
 ) {}
