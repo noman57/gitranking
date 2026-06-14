@@ -14,28 +14,43 @@ Results are returned in GitHub's native order. The score is attached to each ite
 
 ## Getting Started
 
-### Prerequisites
+### Run with Docker (recommended)
 
-- Java 21
-- Maven 3.x
+```bash
+docker compose up --build
+```
 
-### Configuration
+The API is available at `http://localhost:8080`. No local Java or Maven installation required.
 
-Set your GitHub Personal Access Token in `application.properties` or as an environment variable:
+To pass a GitHub token:
+
+```bash
+GITHUB_TOKEN=<your-github-pat> docker compose up --build
+```
+
+### Run locally
+
+**Prerequisites:** Java 21, Maven 3.x
+
+Set your GitHub Personal Access Token in `application.properties`:
 
 ```properties
 github.token=<your-github-pat>
 ```
 
-Without a token the app runs unauthenticated (30 requests/min rate limit). With a token the limit increases to 5,000 requests/min.
+Start a Redis instance (required for caching):
 
-### Run
+```bash
+docker compose up redis
+```
+
+Then run the app:
 
 ```bash
 mvn spring-boot:run
 ```
 
-The API is available at `http://localhost:8080`.
+Without a token the app runs unauthenticated (30 requests/min rate limit). With a token the limit increases to 5,000 requests/min.
 
 ## API
 
@@ -65,7 +80,6 @@ GET /repositories?language=java&createdAfter=2023-01-01&perPage=10
   "page": 1,
   "perPage": 10,
   "totalCount": 28471,
-  "incompleteResults": false,
   "items": [
     {
       "name": "spring-projects/spring-boot",
@@ -102,8 +116,8 @@ A `@RestControllerAdvice` (`GlobalExceptionHandler`) catches all domain exceptio
 
 | Exception | HTTP Status | Client Message |
 |---|---|---|
-| `GitHubRateLimitException` | 429 | "GitHub API rate limit exceeded. Please wait before retrying." |
-| `GitHubAuthException` | 503 | "Repository search is temporarily unavailable. Please try again later." |
+| `GitHubRateLimitException` | 429 | "Rate limit exceeded. Please wait before retrying." |
+| `GitHubAuthException` | 502 | "Repository search is temporarily unavailable. Please try again later." |
 | `GitHubUpstreamException` | 502 | "Repository search is temporarily unavailable. Please try again later." |
 | Invalid parameter | 400 | "Invalid value for parameter '...'." |
 | Unexpected | 500 | "An unexpected error occurred. Please try again later." |
@@ -120,6 +134,19 @@ A `@RestControllerAdvice` (`GlobalExceptionHandler`) catches all domain exceptio
 | Do not retry | `GitHubAuthException`, `GitHubRateLimitException` |
 
 Auth and rate-limit failures are not retried — they will not resolve by retrying and would only burn rate-limit quota further.
+
+### Redis Cache
+
+GitHub search results are cached in Redis via Spring Cache (`@Cacheable`) on `RepositorySearchService.search()`. The cache key is the full combination of request parameters — different queries are cached independently.
+
+| Setting | Value |
+|---|---|
+| TTL | 1 hour |
+| Eviction policy | `allkeys-lfu` (least frequently used) |
+| Memory limit | 256 MB |
+| Serialization | JSON (Jackson) |
+
+LFU eviction means popular searches (high access frequency) stay cached longer and are the last to be evicted under memory pressure.
 
 ### Why Not MapStruct?
 
@@ -138,12 +165,17 @@ Adding MapStruct would introduce an annotation processor, a mapper interface, an
 | Property | Default | Description |
 |---|---|---|
 | `github.token` | _(empty)_ | GitHub PAT for authenticated requests |
+| `github.api.url` | `https://api.github.com` | GitHub API base URL |
 | `scoring.stars-weight` | `3.0` | Weight applied to star count |
 | `scoring.forks-weight` | `2.0` | Weight applied to fork count |
 | `scoring.recency-decay` | `0.001` | Exponential decay rate for recency (higher = stronger penalty for old repos) |
+| `spring.data.redis.host` | `localhost` | Redis host |
+| `spring.data.redis.port` | `6379` | Redis port |
 
 ## Running Tests
 
 ```bash
 mvn test
 ```
+
+Cache integration tests (`RepositorySearchCacheIT`) require Docker to spin up a Redis container via Testcontainers.

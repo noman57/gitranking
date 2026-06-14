@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - SPRING_DATA_REDIS_HOST=redis
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lfu
