@@ -59,7 +59,7 @@ class RepositorySearchIntegrationTest {
         List<Float> scores = given()
                 .queryParam("language", "java")
                 .when()
-                .get("/repositories")
+                .get("/v1/repositories")
                 .then()
                 .statusCode(200)
                 .body("items", hasSize(2))

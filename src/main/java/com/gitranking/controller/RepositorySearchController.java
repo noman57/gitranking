@@ -17,7 +17,7 @@ import java.time.LocalDate;
 
 @Validated
 @RestController
-@RequestMapping("/repositories")
+@RequestMapping("/v1/repositories")
 public class RepositorySearchController {
 
     private final RepositorySearchService searchService;

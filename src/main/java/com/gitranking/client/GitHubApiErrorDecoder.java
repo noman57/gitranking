@@ -23,9 +23,11 @@ public class GitHubApiErrorDecoder implements ErrorDecoder {
         String body = readBody(response);
         log.debug("GitHub error response — method: {}, status: {}, body: {}", methodKey, response.status(), body);
         return switch (response.status()) {
-            case 401, 403 -> new GitHubAuthException(
-                    "GitHub auth failure [%d] on %s".formatted(response.status(), methodKey),
-                    response.status());
+            case 401 -> new GitHubAuthException(
+                    "GitHub auth failure [401] on %s".formatted(methodKey), 401);
+            case 403 -> isRateLimitBody(body)
+                    ? new GitHubRateLimitException("GitHub secondary rate limit on %s".formatted(methodKey))
+                    : new GitHubAuthException("GitHub auth failure [403] on %s".formatted(methodKey), 403);
             case 429 -> new GitHubRateLimitException(
                     "GitHub rate limit hit on %s".formatted(methodKey));
             case 500, 502, 503, 504 -> new GitHubUpstreamException(
@@ -33,6 +35,11 @@ public class GitHubApiErrorDecoder implements ErrorDecoder {
                     response.status());
             default -> defaultDecoder.decode(methodKey, response);
         };
+    }
+
+    private boolean isRateLimitBody(String body) {
+        String lower = body.toLowerCase();
+        return lower.contains("rate limit") || lower.contains("secondary rate") || lower.contains("abuse");
     }
 
     private String readBody(Response response) {

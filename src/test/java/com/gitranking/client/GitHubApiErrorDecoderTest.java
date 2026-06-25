@@ -27,9 +27,17 @@ class GitHubApiErrorDecoderTest {
     @ParameterizedTest
     @ValueSource(ints = {401, 403})
     void authStatuses_throwGitHubAuthException(int status) {
-        Exception ex = decoder.decode("GitHubClient#search", response(status));
+        Exception ex = decoder.decode("GitHubClient#search", response(status, "Forbidden"));
 
         assertThat(ex).isInstanceOf(GitHubAuthException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"You have exceeded a secondary rate limit", "API rate limit exceeded", "abuse detected"})
+    void status403_withRateLimitBody_throwsGitHubRateLimitException(String body) {
+        Exception ex = decoder.decode("GitHubClient#search", response(403, body));
+
+        assertThat(ex).isInstanceOf(GitHubRateLimitException.class);
     }
 
     @Test
@@ -74,6 +82,10 @@ class GitHubApiErrorDecoderTest {
     // --- helpers ---
 
     private Response response(int status) {
+        return response(status, "");
+    }
+
+    private Response response(int status, String body) {
         return Response.builder()
                 .status(status)
                 .reason("reason")
@@ -85,6 +97,7 @@ class GitHubApiErrorDecoderTest {
                         null,
                         StandardCharsets.UTF_8,
                         null))
+                .body(body, StandardCharsets.UTF_8)
                 .build();
     }
 }

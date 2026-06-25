@@ -17,7 +17,7 @@ info:
     by clients to apply their own ranking or filtering.
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8080/v1
 
 paths:
   /repositories:
@@ -85,7 +85,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "429":
-          description: Rate limit exceeded
+          description: Rate limit exceeded (GitHub primary 429 or secondary 403 rate limit)
           content:
             application/json:
               schema:
