@@ -2,6 +2,7 @@ package com.gitranking.service;
 
 import com.gitranking.client.GitHubClient;
 import com.gitranking.exception.GitHubUpstreamException;
+import com.gitranking.model.ProgrammingLanguage;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,7 +34,7 @@ class RepositorySearchServiceRetryTest {
         when(gitHubClient.searchRepositories(any(), any(), any(), anyInt(), anyInt()))
             .thenThrow(new GitHubUpstreamException("GitHub 503 - service unavailable", 503));
 
-        assertThatThrownBy(() -> repositorySearchService.search("java", LocalDate.now(), 10, 1))
+        assertThatThrownBy(() -> repositorySearchService.search(ProgrammingLanguage.JAVA, LocalDate.now(), 10, 1))
                 .isInstanceOf(GitHubUpstreamException.class)
                 .hasMessageContaining("GitHub 503 - service unavailable");
 

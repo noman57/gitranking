@@ -11,4 +11,4 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lfu
+    command: redis-server --maxmemory 256mb --maxmemory-policy volatile-ttl

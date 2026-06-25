@@ -4,6 +4,7 @@ import com.gitranking.client.GitHubClient;
 import com.gitranking.client.model.GitHubRepository;
 import com.gitranking.client.model.GitHubSearchResponse;
 import com.gitranking.model.PagedResult;
+import com.gitranking.model.ProgrammingLanguage;
 import com.gitranking.model.RepositoryResult;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class RepositorySearchService {
      * Searches GitHub for repositories matching the given criteria and returns them
      * in the order GitHub provided them.
      *
-     * @param language     programming language filter (e.g. "java"), may be null
+     * @param language     programming language filter, may be null
      * @param createdAfter only include repositories created on or after this date, may be null
      * @param perPage      number of results per page (max 100)
      * @param page         page number (1-based)
@@ -42,7 +43,7 @@ public class RepositorySearchService {
      */
     @Cacheable(value = "repositories", key = "{#language, #createdAfter, #perPage, #page}")
     @Retry(name = "githubSearch")
-    public PagedResult<RepositoryResult> search(String language, LocalDate createdAfter, int perPage, int page) {
+    public PagedResult<RepositoryResult> search(ProgrammingLanguage language, LocalDate createdAfter, int perPage, int page) {
         String query = buildQuery(language, createdAfter);
         log.debug("Searching repositories — query: '{}', perPage: {}, page: {}", query, perPage, page);
         GitHubSearchResponse response = gitHubClient.searchRepositories(query, "updated", "desc", perPage, page);
@@ -60,10 +61,10 @@ public class RepositorySearchService {
         return new PagedResult<>(page, perPage, response.getTotalCount(), results);
     }
 
-    private String buildQuery(String language, LocalDate createdAfter) {
+    private String buildQuery(ProgrammingLanguage language, LocalDate createdAfter) {
         StringBuilder q = new StringBuilder("is:public");
-        if (language != null && !language.isBlank()) {
-            q.append(" language:").append(language.strip().replaceAll("[^a-zA-Z0-9+#]", ""));
+        if (language != null) {
+            q.append(" language:").append(language.getValue());
         }
         if (createdAfter != null) {
             q.append(" created:>=").append(createdAfter);

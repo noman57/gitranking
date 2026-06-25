@@ -25,14 +25,13 @@ class GlobalExceptionHandlerTest {
     private RepositorySearchService repositorySearchService;
 
     @Test
-    void whenRateLimitExceeded_returns429WithSafeMessage() throws Exception {
+    void whenRateLimitExceeded_returns502WithSafeMessage() throws Exception {
         when(repositorySearchService.search(any(), any(), anyInt(), anyInt()))
                 .thenThrow(new GitHubRateLimitException("raw github detail"));
 
         mockMvc.perform(get("/v1/repositories"))
-                .andExpect(status().isTooManyRequests())
-                .andExpect(jsonPath("$.status").value(429))
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsStringIgnoringCase("rate limit")))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.status").value(502))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("raw github detail"))));
     }
 

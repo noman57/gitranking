@@ -1,5 +1,6 @@
 package com.gitranking.cache;
 
+import com.gitranking.model.ProgrammingLanguage;
 import com.gitranking.service.RepositorySearchService;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.Test;
@@ -47,8 +48,8 @@ class RepositorySearchCacheIT {
         when(gitHubClient.searchRepositories(any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(response);
 
-        searchService.search("java", null, 10, 1);
-        searchService.search("java", null, 10, 1);
+        searchService.search(ProgrammingLanguage.JAVA, null, 10, 1);
+        searchService.search(ProgrammingLanguage.JAVA, null, 10, 1);
 
         verify(gitHubClient, times(1)).searchRepositories(any(), any(), any(), anyInt(), anyInt());
     }
@@ -62,8 +63,8 @@ class RepositorySearchCacheIT {
         when(gitHubClient.searchRepositories(any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(response);
 
-        searchService.search("java", null, 10, 1);
-        searchService.search("python", null, 10, 1);
+        searchService.search(ProgrammingLanguage.JAVA, null, 10, 1);
+        searchService.search(ProgrammingLanguage.PYTHON, null, 10, 1);
 
         verify(gitHubClient, times(2)).searchRepositories(any(), any(), any(), anyInt(), anyInt());
     }

@@ -21,8 +21,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(GitHubRateLimitException.class)
     public ResponseEntity<ErrorResponse> handleRateLimit(GitHubRateLimitException ex) {
         log.warn("GitHub rate limit exceeded. {}", ex.getMessage());
-        return error(HttpStatus.TOO_MANY_REQUESTS,
-                "Rate limit exceeded. Please wait before retrying.");
+        return error(HttpStatus.BAD_GATEWAY,
+                "Repository search is temporarily unavailable. Please try again later.");
     }
 
     @ExceptionHandler(GitHubAuthException.class)

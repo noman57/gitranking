@@ -31,9 +31,10 @@ paths:
         - name: language
           in: query
           required: false
-          description: Filter by programming language (e.g. `java`, `python`)
+          description: Filter by programming language
           schema:
             type: string
+            enum: [java, python, javascript, typescript, go, rust, c, "c++", "c#", ruby, php, swift, kotlin, scala, shell]
             example: java
         - name: createdAfter
           in: query
@@ -84,8 +85,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        "429":
-          description: Rate limit exceeded (GitHub primary 429 or secondary 403 rate limit)
+        "502":
+          description: Upstream service unavailable (includes GitHub rate limit and server errors)
           content:
             application/json:
               schema:

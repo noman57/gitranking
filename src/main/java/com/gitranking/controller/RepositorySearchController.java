@@ -1,6 +1,7 @@
 package com.gitranking.controller;
 
 import com.gitranking.model.PagedResult;
+import com.gitranking.model.ProgrammingLanguage;
 import com.gitranking.model.RepositoryResult;
 import com.gitranking.service.RepositorySearchService;
 import jakarta.validation.constraints.Max;
@@ -28,7 +29,7 @@ public class RepositorySearchController {
 
     @GetMapping
     public ResponseEntity<PagedResult<RepositoryResult>> search(
-            @RequestParam(required = false) String language,
+            @RequestParam(required = false) ProgrammingLanguage language,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdAfter,
             @RequestParam(defaultValue = "30") @Min(1) @Max(100) int perPage,
             @RequestParam(defaultValue = "1") @Min(1) int page

@@ -78,12 +78,12 @@ Full spec: [`docs/openapi.yaml`](docs/openapi.yaml)
 ### Search Repositories
 
 ```
-GET /repositories
+GET /v1/repositories
 ```
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `language` | string | No | Filter by programming language (e.g. `java`) |
+| `language` | enum | No | Filter by programming language. Accepted values: `java`, `python`, `javascript`, `typescript`, `go`, `rust`, `c`, `c++`, `c#`, `ruby`, `php`, `swift`, `kotlin`, `scala`, `shell` |
 | `createdAfter` | date | No | Only repos created on or after this date (`yyyy-MM-dd`) |
 | `perPage` | integer | No | Results per page, default `30`, max `100` |
 | `page` | integer | No | Page number, default `1` |
@@ -113,13 +113,13 @@ GET /repositories?language=java&createdAfter=2023-01-01&perPage=10
 
 ```bash
 # Search Java repositories created after 2023
-curl "http://localhost:8080/repositories?language=java&createdAfter=2023-01-01&perPage=10"
+curl "http://localhost:8080/v1/repositories?language=java&createdAfter=2023-01-01&perPage=10"
 
 # Search with pagination
-curl "http://localhost:8080/repositories?language=python&perPage=5&page=2"
+curl "http://localhost:8080/v1/repositories?language=python&perPage=5&page=2"
 
 # No filters — top repositories
-curl "http://localhost:8080/repositories"
+curl "http://localhost:8080/v1/repositories"
 ```
 
 ### Health Check
@@ -136,11 +136,12 @@ GitHub API calls are made via a declarative [Spring Cloud OpenFeign](https://spr
 
 A custom `ErrorDecoder` (`GitHubApiErrorDecoder`) intercepts non-2xx responses before they reach application code and translates them into typed domain exceptions:
 
-| HTTP Status | Exception |
-|---|---|
-| 401, 403 | `GitHubAuthException` |
-| 429 | `GitHubRateLimitException` |
-| 500, 502, 503, 504 | `GitHubUpstreamException` |
+| HTTP Status | Exception | Notes |
+|---|---|---|
+| 401 | `GitHubAuthException` | |
+| 403 | `GitHubAuthException` or `GitHubRateLimitException` | Body is inspected — GitHub returns 403 for secondary rate limits (abuse detection) in addition to auth failures |
+| 429 | `GitHubRateLimitException` | Primary rate limit |
+| 500, 502, 503, 504 | `GitHubUpstreamException` | |
 
 ### Global Error Handling
 
@@ -148,11 +149,13 @@ A `@RestControllerAdvice` (`GlobalExceptionHandler`) catches all domain exceptio
 
 | Exception | HTTP Status | Client Message |
 |---|---|---|
-| `GitHubRateLimitException` | 429 | "Rate limit exceeded. Please wait before retrying." |
+| `GitHubRateLimitException` | 502 | "Repository search is temporarily unavailable. Please try again later." |
 | `GitHubAuthException` | 502 | "Repository search is temporarily unavailable. Please try again later." |
 | `GitHubUpstreamException` | 502 | "Repository search is temporarily unavailable. Please try again later." |
 | Invalid parameter | 400 | "Invalid value for parameter '...'." |
 | Unexpected | 500 | "An unexpected error occurred. Please try again later." |
+
+**Why 502 for rate limit errors?** GitHub's rate limit is a server-side quota on *our* application, not a constraint on the calling client. Returning `429` to the client would imply they sent too many requests, which is misleading — they didn't. A `502 Bad Gateway` correctly signals that the upstream dependency is temporarily unavailable without leaking any detail about our infrastructure or rate limit status.
 
 ### Retry Mechanism
 
@@ -165,7 +168,7 @@ A `@RestControllerAdvice` (`GlobalExceptionHandler`) catches all domain exceptio
 | Retry on | `GitHubUpstreamException`, `IOException` |
 | Do not retry | `GitHubAuthException`, `GitHubRateLimitException` |
 
-Auth and rate-limit failures are not retried — they will not resolve by retrying and would only burn rate-limit quota further.
+Auth and rate-limit failures are not retried — retrying would not resolve them and would only consume more quota.
 
 ### Redis Cache
 
